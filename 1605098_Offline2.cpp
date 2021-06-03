@@ -257,19 +257,22 @@ int main(void)
     scene.open("scene.txt");
     stage1.open("stage1.txt");
     stage1 << std::fixed;
-    stage1 << std::setprecision(6);
+    stage1 << std::setprecision(7);
 
     scene >> eyeX >> eyeY >> eyeZ;
     scene >> lookX >> lookY >> lookZ;
     scene >> upX >> upY >> upZ;
     scene >> fovY >> aspectRatio >> near >> far;
 
+    int tCount = 0;
+    // stage 1: Modeling Transformation
     string cmd;
     while(true)
     {
         scene >> cmd;
         if (cmd == "triangle")
         {
+            tCount++;
             cout << "triangle" << endl;
             for (int i = 0; i < 3; i++)
             {
@@ -367,6 +370,69 @@ int main(void)
 
     scene.close();
     stage1.close();
+
+    // stage 2: View Transformation
+    Vector look(lookX, lookY, lookZ);
+    Vector eye(eyeX, eyeY, eyeZ);
+    Vector up(upX, upY, upZ);
+
+    Vector l = look - eye;
+    l.normalize();
+
+    Vector r = Vector::crossMul(l, up);
+    r.normalize();
+
+    Vector u = Vector::crossMul(r, l);
+
+    Matrix T = Matrix::identityMatrix(4);
+    T.matrix[0][3] = -eyeX;
+    T.matrix[1][3] = -eyeY;
+    T.matrix[2][3] = -eyeZ;
+
+    Matrix R = Matrix::identityMatrix(4);
+    R.matrix[0][0] = r.x;
+    R.matrix[0][1] = r.y;
+    R.matrix[0][2] = r.z;
+
+    R.matrix[1][0] = u.x;
+    R.matrix[1][1] = u.y;
+    R.matrix[1][2] = u.z;
+
+    R.matrix[2][0] = -l.x;
+    R.matrix[2][1] = -l.y;
+    R.matrix[2][2] = -l.z;
+
+    Matrix V = R * T;
+
+    ifstream stageIn;
+    ofstream stage2;
+    stageIn.open("stage1.txt");
+    stage2.open("stage2.txt");
+    stage2 << std::fixed;
+    stage2 << std::setprecision(7);
+
+    int tCountTemp = tCount;
+    while( tCountTemp )
+    {
+        for (int i = 0;  i < 3; i++)
+        {
+            double d1, d2, d3;
+            stageIn >> d1 >> d2 >> d3;
+
+            Point p(d1, d2, d3, 1);
+            Point temp = transformPoint( V , p );
+    //        temp.print();
+
+            stage2 << temp.x << "  " << temp.y << "  " << temp.z << endl;
+        }
+        stage2 << endl;
+        tCountTemp--;
+    }
+    stageIn.close();
+    stage2.close();
+
+    // stage 3 : Projection Transformation
+
 
     return 0;
 }
