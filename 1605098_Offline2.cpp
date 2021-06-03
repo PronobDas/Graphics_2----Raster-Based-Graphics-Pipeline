@@ -18,7 +18,7 @@ public:
         x = a;
         y = b;
         z = c;
-        w = 1;
+        w = d;
     }
     Point operator+( Point p)
     {
@@ -40,7 +40,7 @@ public:
     }
     void print()
     {
-        cout << x << "  " << y << "  " << z << endl;
+        cout << x << "  " << y << "  " << z  << "  "<< w << endl;
     }
 };
 
@@ -265,6 +265,7 @@ int main(void)
     scene >> fovY >> aspectRatio >> near >> far;
 
     int tCount = 0;
+
     // stage 1: Modeling Transformation
     string cmd;
     while(true)
@@ -371,6 +372,8 @@ int main(void)
     scene.close();
     stage1.close();
 
+
+
     // stage 2: View Transformation
     Vector look(lookX, lookY, lookZ);
     Vector eye(eyeX, eyeY, eyeZ);
@@ -431,7 +434,50 @@ int main(void)
     stageIn.close();
     stage2.close();
 
+
+
     // stage 3 : Projection Transformation
+    double fovX = fovY * aspectRatio;
+    double _t = near * tan(PI * fovY / 360);
+    double _r = near * tan(PI * fovX/ 360);
+
+    Matrix P = Matrix::identityMatrix(4);
+    P.matrix[0][0] = near/_r;
+    P.matrix[1][1] = near/_t;
+    P.matrix[2][2] = -(far + near) / (far - near);
+    P.matrix[2][3] = -(2 * far * near) / (far - near);
+    P.matrix[3][2] = -1;
+    P.matrix[3][3] = 0;
+
+    P.print();
+    ifstream stageIn2;
+    ofstream stage3;
+    stageIn2.open("stage2.txt");
+    stage3.open("stage3.txt");
+    stage3 << std::fixed;
+    stage3 << std::setprecision(7);
+
+    tCountTemp = tCount;
+    while( tCountTemp )
+    {
+        for (int i = 0;  i < 3; i++)
+        {
+            double d1, d2, d3;
+            stageIn2 >> d1 >> d2 >> d3;
+
+            Point pPoint(d1, d2, d3, 1);
+            //pPoint.print();
+            Point temp = transformPoint( P , pPoint );
+            //P.print();
+            //temp.print();
+
+            stage3 << temp.x / temp.w << "  " << temp.y / temp.w<< "  " << temp.z / temp.w<< endl;
+        }
+        stage3 << endl;
+        tCountTemp--;
+    }
+    stageIn2.close();
+    stage3.close();
 
 
     return 0;
