@@ -480,6 +480,32 @@ int main(void)
     stage3.close();
 
 
+    // stage 4 : Clipping & scan conversion using Z-buffer algorithm
+
+    ifstream stageIn3;
+    ifstream config;
+    ofstream z_buffer;
+    stageIn3.open("stage3.txt");
+    config.open("config.txt");
+    z_buffer.open("z_buffer.txt");
+
+    double screenWidth, screenHeight;
+    double leftLimit, rightLimit, bottomLimit, topLimit, frontLimit, rearLimit;
+
+    config >> screenWidth >> screenHeight;
+    config >> leftLimit >> bottomLimit;
+    rightLimit = -leftLimit;
+    topLimit = -bottomLimit;
+    config >> frontLimit >> rearLimit;
+    config.close();
+
+
+
+
+
+    stageIn3.close();
+    z_buffer.close();
+
     return 0;
 }
 
